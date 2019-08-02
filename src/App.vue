@@ -3,17 +3,11 @@
   <div id="app">
     <div class="main">
       <div class="calendar-holder">
-        <FullCalendar :config="config" :events="events" @event-selected="eventClick" @event-drop="eventDrop" @event-resize="eventResize"/>
+        <FullCalendar :config="config" :events="events" @event-selected="eventClick" @event-drop="eventDrop" @event-resize="eventResize" @event-render="eventRendered"/>
       </div>
-      <JsonCSV :data   = "events"  name    = "events.csv">
-        <button style="height: 40px; font-size: 15px; width: 80px;  position: absolute; top: 60px; right: 400px;">Export</button>
-      </JsonCSV>
-      <input type="file" ref="file" style="display: none" @change="importCsv">
-      <button style="height: 40px; font-size: 15px; width: 80px;  position: absolute; top: 60px; right: 500px;" @click="$refs.file.click()">Import</button>
-      <button style="height: 40px; font-size: 15px; width: 80px;  position: absolute; top: 60px; right: 300px;" @click="showReportModal = true">Report</button>
       
       <div v-if="showModal" @close="showModal = false">
-        <EventForm :event="currentEvent" :method="currentMethod" :list="projects" @addProject="addProject" @close="closeModal" @removeProject="removeProject"/>
+        <EventForm :event="currentEvent" :method="currentMethod" :list="projects" :events="events" @addProject="addProject" @close="closeModal" @removeProject="removeProject"/>
       </div>
 
       <div v-if="showReportModal" @close="showReportModal = false">
@@ -21,7 +15,23 @@
       </div>
 
       <b-container class="form-holder" id="external-events">
-        <div id='external-events-listing'>
+        <b-row>
+          <b-col>
+          <JsonCSV :data   = "events"  name    = "events.csv">
+            <button class="btn btn-primary">Export</button>
+          </JsonCSV>
+          </b-col>
+
+          <b-col>
+          <input type="file" ref="file" style="display: none" @change="importCsv">
+          <button class="btn btn-primary" @click="$refs.file.click()">Import</button>
+          </b-col>
+
+          <b-col>
+          <button class="btn btn-primary" @click="showReportModal = true">Report</button>
+          </b-col>
+        </b-row>
+        <div id='external-events-listing' style="overflow: scroll; margin-top: 20px; max-height: 600px; margin-bottom: 30px; overflow-x:hidden;">
           <b-row v-for="item in projects" :key="item.id">
             <b-col cols="1"></b-col>
             <b-col cols="5">
@@ -34,9 +44,12 @@
             </div>
             </b-col>
           </b-row>
+        </div>
+
+        <div>
           <b-row>
-            <b-col><button style="height: 40px; font-size: 15px;    margin-top: 30px;   margin-left: -25px;" @click="currentMethod = 0, showModal = true">+ add project</button></b-col>
-            <b-col><button style="height: 40px; font-size: 15px;    margin-top: 30px;   margin-left: -35px;" @click="currentMethod = 4, showModal = true">+ add event</button></b-col>
+            <b-col><button class="btn btn-primary" @click="currentMethod = 0, showModal = true">+ add project</button></b-col>
+            <b-col><button class="btn btn-primary" @click="currentMethod = 3, showModal = true">+ add event</button></b-col>
           </b-row>
         </div>
         
@@ -52,6 +65,7 @@ import DateChooser from './components/DateChooser'
 import JsonCSV from 'vue-json-csv'
 import moment from 'moment';
 import jsPDF from 'jspdf' 
+import { constants } from 'crypto';
 
 export default {
   name: 'app',
@@ -62,6 +76,19 @@ export default {
     DateChooser,
   },
   methods: {
+    eventRendered(event, element, view){
+      var text = event.title;
+      if (event.tolls) 
+      {
+        text += '<br /> toll: ' + event.tolls;
+      }
+      if (event.mileage) 
+      {
+        text += '<br /> mileage: ' + event.mileage;
+      }
+      
+      element[0].getElementsByClassName("fc-title")[0].innerHTML = text;
+    },
     updateProjectsView() {
       var i, j;
       this.projects = [];
@@ -94,19 +121,39 @@ export default {
       startDate.setHours(0);
       endDate.setHours(0);
 
+      var enterCount = 0;
+      var x = 10, y = 10;
+
       while (startDate <= endDate) {
         var nextDay = new Date(startDate);
         nextDay.setDate(startDate.getDate()+1);
         var flag = false;
 
         for (i=0; i<this.events.length; i++) {
-          if (new Date(this.events[i].start) >= startDate && new Date(this.events[i].end) <= nextDay) {
+          if (new Date(this.events[i].start) >= startDate && new Date(this.events[i].start) <= nextDay) {
             if (!flag) {
-              text += startDate.toDateString() + '\n\n\n';
+              doc.text(x, y, startDate.toDateString() + '\n\n');
+              enterCount += 2;
+              y += 10 * 2;
+              if (enterCount >= 28) {
+                enterCount = 0;
+                y = 10;
+                doc.addPage();
+              }
               flag = true;
             }
 
-            text += '\t\t' + this.events[i].title + ' - ' + this.events[i].id + ' - ';
+            var j, proId;
+            for (j=0;j<this.events.length; j++) {
+              if (this.events[j].title == this.events[i].title)
+              {
+                proId = this.events[j].id;
+                break;
+
+              }
+            }
+
+            text = '\t\t' + this.events[i].title + ' - ' + proId + ' - ';
             if (this.events[i].tolls) 
             {
               text += this.events[i].tolls + ' tolls - ';
@@ -115,20 +162,35 @@ export default {
             {
               text += this.events[i].mileage + ' miles - ';
             }
-            var duration = new Date(this.events[i].end).valueOf() - new Date(this.events[i].start).valueOf();
-            duration = duration /1000/60/60; 
-            text += duration + 'hrs.\n\n'
+            var duration = Math.abs(new Date(this.events[i].end) - new Date(this.events[i].start)) / 36e5;
+            text += duration + ' hrs.\n'
+            enterCount ++;
+            doc.text(x, y, text);
+            y+= 10;
+            console.log(enterCount);
+            if (enterCount >= 28) {
+                enterCount = 0;
+                y = 10;
+                doc.addPage();
+              }
           }
         }
 
         if (flag) {
-          text += '\n';
+          
+          y+= 10;
+          enterCount ++;
+          if (enterCount >= 28) {
+                enterCount = 0;
+                y = 10;
+                doc.addPage();
+              }
         }
         
         startDate = nextDay;
       }
 
-      doc.text(text, 10, 10);
+
       doc.save(pdfName + '.pdf');
       this.showReportModal = false;
     },
@@ -172,7 +234,6 @@ export default {
         var newEvents = JSON.parse(json);
 
         vm.events = newEvents;
-        vm.maxId += newEvents.length;
         vm.updateProjectsView();
       }
       reader.readAsText(file);
@@ -227,6 +288,24 @@ export default {
         this.showModal = false;
       }
     },
+    get_new_id() {
+      let new_id = Math.floor(Math.random() * 1000001);
+          while (true) {
+            let flag = false;
+            let i;
+            for (i=0;i <this.events.length; i++) {
+              if (this.events[i].id == new_id) {
+                flag = true;
+                break;
+              }
+            }
+            if (!flag) {
+              break;
+            }
+            new_id = Math.floor(Math.random() * 1000001);
+          }
+          return new_id;
+    },
     addProject(project) {
       if (this.currentMethod == 0 || this.currentMethod == 2) {
         if (project.id) {
@@ -235,7 +314,7 @@ export default {
           this.showModal = false;
         } else {
           let newproject = {
-            id: this.maxId + 1,
+            id: this.get_new_id(),
             title: project.title,
             start: project.start,
             end: project.end,
@@ -245,7 +324,6 @@ export default {
             description: project.description,
             backgroundColor: project.color
           };
-          this.maxId ++;
           this.events.push(newproject);
           this.showModal = false;
           this.currentEvent = null;
@@ -253,8 +331,13 @@ export default {
         this.updateProjectsView();
       } else if(this.currentMethod == 1){
         var i;
+        var flag = true;
         for (i=0;i <this.events.length; i++) {
           if (this.events[i].title == this.currentEvent.title) {
+            if (flag == true) {
+              this.events[i].id = project.id;
+              flag = false;
+            }
             this.events[i].title = project.title;
             this.events[i].backgroundColor = project.color;
           }
@@ -263,9 +346,9 @@ export default {
         this.updateProjectsView();
         this.currentEvent = null;
         this.showModal = false;
-      } else if (this.currentMethod == 4) {
+      } else if (this.currentMethod == 3) {
         let newproject = {
-            id: this.maxId + 1,
+            id: this.get_new_id(),
             title: project.title,
             start: project.start,
             end: project.end,
@@ -275,7 +358,6 @@ export default {
             backgroundColor: project.color,
             description: project.description,
           };
-          this.maxId ++;
           this.events.push(newproject);
           this.showModal = false;
 
@@ -330,7 +412,6 @@ export default {
       showModal: false,
       showReportModal: false,
       selected: 0,
-      maxId: 123123,
       events: [
       ],
       projects: [
@@ -364,7 +445,6 @@ export default {
 }
 .main {
   display: flex;
-  align-items: center;
 }
 .calendar-holder {
   width: 100%;
@@ -396,5 +476,51 @@ export default {
 a:not([href]):not([tabindex]) {
     color: azure !important;
     text-decoration: none;
+}
+
+.btn {
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-info {
+    color: #fff;
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #d9534f;
+    border-color: #d43f3a;
 }
 </style>

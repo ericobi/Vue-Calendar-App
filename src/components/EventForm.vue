@@ -3,7 +3,21 @@
         <div class="modal-wrapper">
             <div class="modal-container">
                 <h2>{{ formTitle }}</h2>
-                <b-row v-if="method != 2 && method != 4">
+
+                <b-row v-if="method == 1">
+                    <b-col sm="2">
+                    <label >Id:</label>
+                    </b-col>
+                    <b-col sm="10">
+                    <b-form-input
+                    v-model="id"
+                    type="number"
+                    trim
+                    ></b-form-input>
+                    </b-col>
+                </b-row>
+
+                <b-row v-if="method != 2 && method != 3">
                     <b-col sm="2">
                     <label >Title:</label>
                     </b-col>
@@ -11,11 +25,12 @@
                     <b-form-input
                     v-model="title"
                     trim
+                    autofocus
                     ></b-form-input>
                     </b-col>
                 </b-row>
 
-                <b-row v-if="method == 4">
+                <b-row v-if="method == 3">
                     <b-col sm="2">
                     <label >Title:</label>
                     </b-col>
@@ -50,7 +65,6 @@
                     <b-form-input
                     v-model="phase"
                     trim
-                    type="number"
                     ></b-form-input>
                     </b-col>
                 </b-row>
@@ -94,7 +108,7 @@
                     </b-col>
                 </b-row>
 
-                <b-row v-if="method != 2 && method != 4">
+                <b-row v-if="method != 2 && method != 3">
                     <b-col sm="2">
                     <label >Color:</label>
                     </b-col>
@@ -103,16 +117,25 @@
                     </b-col>
                 </b-row>
 
+                <b-row v-if="method == 1">
+                    <b-col sm="2">
+                    <label >Total Time:</label>
+                    </b-col>
+                    <b-col sm="10">
+                    <label >{{ totalTime }} hrs</label>
+                    </b-col>
+                </b-row>
+
 
                 <b-row>
                     <b-col sm="4">
-                    <button type="button" @click="add">Save</button>
+                    <button class="btn btn-primary" type="button" @click="add">Save</button>
                     </b-col>
                     <b-col sm="4">
-                    <button v-if="method == 1 || method == 2" type="button" @click="remove">Remove</button>
+                    <button class="btn btn-primary" v-if="method == 1 || method == 2" type="button" @click="remove">Remove</button>
                     </b-col>
                     <b-col sm="4">
-                    <button type="button" @click="close">Back</button>
+                    <button class="btn btn-primary" type="button" @click="close">Back</button>
                     </b-col>
                 </b-row>
             </div>
@@ -127,7 +150,7 @@ import moment from 'moment';
 
 export default {
     name: 'EventForm',
-    props: ['event', 'method', 'list'],
+    props: ['event', 'method', 'list', 'events'],
     data(){
         return {
             formTitle: 'Add new project',
@@ -143,6 +166,7 @@ export default {
             name: '',
             selected: null,
             options: null,
+            totalTime: 0,
         }
     },
     created() {
@@ -174,12 +198,13 @@ export default {
             tolls: this.tolls,
             color: this.color,
         }
-        if (this.method != 4) {
+
+        if (this.method != 3) {
             if (!project.title) {
                 alert('Input project title.');
             }
             else {
-
+                console.log(this.event, project.id, this.method)
                 if (this.method == 0) {
                     var i;
                     for (i=0;i<this.list.length; i++) {
@@ -188,9 +213,19 @@ export default {
                             return;
                         } 
                     }
-                } else {
-                    this.$emit('addProject', project);
+                } 
+                else if (this.event.id != project.id) {
+                    if (this.method == 1) {
+                        var i;
+                        for (i=0;i<this.list.length; i++) {
+                            if (project.id == this.list[i].id) {
+                                alert('Entry with the same id already exists..');
+                                return;
+                            } 
+                        }
+                    }
                 }
+                this.$emit('addProject', project);
             }
         } else {
             if (this.selected || this.selected == 0) {
@@ -222,6 +257,14 @@ export default {
             this.id = this.event.id
             this.title= this.event.title || ''
             this.color= this.event.backgroundColor || '#FF0000'
+            var i
+            this.totalTime = 0;
+            for (i = 0; i < this.events.length; i++) {
+                if (this.events[i].title == this.title) {
+                    this.totalTime += Math.abs(new Date(this.events[i].end) - new Date(this.events[i].start)) / 36e5;
+                }
+            }
+            this.totalTime = Number(this.totalTime.toFixed(2));
         } else if(this.method == 2){
             this.formTitle = "Edit Entry"
             this.id = this.event.id
@@ -302,5 +345,51 @@ export default {
 .row {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
+}
+
+.btn {
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.btn-info {
+    color: #fff;
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #d9534f;
+    border-color: #d43f3a;
 }
 </style>
