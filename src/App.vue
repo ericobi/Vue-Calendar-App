@@ -111,6 +111,90 @@ export default {
         }
       }
     },
+
+    download() {
+      let pdfName = 'report'; 
+      var doc = new jsPDF();
+      var text = "";
+      var startDate = new Date(this.startDate);
+      var endDate = new Date(this.endDate);
+      var i;
+      startDate.setHours(0);
+      endDate.setHours(0);
+
+      var enterCount = 0;
+      var x = 10, y = 10;
+
+      while (startDate <= endDate) {
+        var nextDay = new Date(startDate);
+        nextDay.setDate(startDate.getDate()+1);
+        var flag = false;
+
+        for (i=0; i<this.events.length; i++) {
+          if (new Date(this.events[i].start) >= startDate && new Date(this.events[i].start) <= nextDay) {
+            if (!flag) {
+              doc.text(x, y, startDate.toDateString() + '\n\n');
+              enterCount += 2;
+              y += 10 * 2;
+              if (enterCount >= 28) {
+                enterCount = 0;
+                y = 10;
+                doc.addPage();
+              }
+              flag = true;
+            }
+
+            var j, proId;
+            for (j=0;j<this.events.length; j++) {
+              if (this.events[j].title == this.events[i].title)
+              {
+                proId = this.events[j].id;
+                break;
+
+              }
+            }
+
+            text = '\t\t' + this.events[i].title + ' - ' + proId + ' - ';
+            if (this.events[i].tolls) 
+            {
+              text += this.events[i].tolls + ' tolls - ';
+            }
+            if (this.events[i].mileage) 
+            {
+              text += this.events[i].mileage + ' miles - ';
+            }
+            var duration = Math.abs(new Date(this.events[i].end) - new Date(this.events[i].start)) / 36e5;
+            text += duration + ' hrs.\n'
+            enterCount ++;
+            doc.text(x, y, text);
+            y+= 10;
+            console.log(enterCount);
+            if (enterCount >= 28) {
+                enterCount = 0;
+                y = 10;
+                doc.addPage();
+              }
+          }
+        }
+
+        if (flag) {
+          
+          y+= 10;
+          enterCount ++;
+          if (enterCount >= 28) {
+                enterCount = 0;
+                y = 10;
+                doc.addPage();
+              }
+        }
+        
+        startDate = nextDay;
+      }
+
+
+      doc.save(pdfName + '.pdf');
+      this.showReportModal = false;
+    },
     
     csvJSON(csv){
 
