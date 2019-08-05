@@ -30,9 +30,9 @@
                     </b-col>
                 </b-row>
 
-                <b-row v-if="method == 3">
+                <b-row v-if="method == 3 || method == 2">
                     <b-col sm="2">
-                    <label >Title:</label>
+                    <label >Project:</label>
                     </b-col>
                     <b-col sm="10">
                     <b-form-select v-model="selected" :options="options"></b-form-select>
@@ -223,6 +223,12 @@ export default {
                         }
                     }
                 }
+
+                if (this.selected || this.selected == 0) {
+                    project.title = this.list[this.selected].title;
+                    project.color = this.list[this.selected].backgroundColor;
+                }
+
                 this.$emit('addProject', project);
             }
         } else {
@@ -274,6 +280,15 @@ export default {
             this.tolls = this.event.tolls || ''
             this.color= this.event.backgroundColor || '#FF0000'
             this.description = this.event.description || ''
+            this.options = []
+            for (i = 0; i < this.list.length; i++) {
+                this.options.push({value : i, text: this.list[i].title})
+                if (this.title == this.list[i].title) {
+                    this.selected = i;
+                }
+            }
+
+            
         } else {
             this.formTitle = "Add New Event"
             this.id = null
