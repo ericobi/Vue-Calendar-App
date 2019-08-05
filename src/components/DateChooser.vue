@@ -22,6 +22,17 @@
                 </b-row>
 
                 <b-row>
+                    <b-col sm="12">
+                        <b-form-checkbox
+                        v-model="condensed"
+                        style="text-align: left;"
+                        >
+                        condensed mode
+                        </b-form-checkbox>
+                    </b-col>
+                </b-row>
+
+                <b-row>
                     <b-col sm="6">
                     <button class="btn btn-primary" type="button" @click="add">Okay</button>
                     </b-col>
@@ -44,6 +55,7 @@ export default {
         return {
             startDate: '',
             endDate: '',
+            condensed: false,
         }
     },
     mounted() {
@@ -55,6 +67,7 @@ export default {
         let project = {
             start: this.startDate,
             end: this.endDate,
+            condensed: this.condensed,
         }
         this.$emit('date_set', project);
     },

@@ -200,13 +200,12 @@ export default {
         }
 
         if (this.method != 3) {
+            var i;
             if (!project.title) {
                 alert('Input project title.');
             }
             else {
-                console.log(this.event, project.id, this.method)
                 if (this.method == 0) {
-                    var i;
                     for (i=0;i<this.list.length; i++) {
                         if (project.title == this.list[i].title) {
                             alert('Project with the same name already exists..');
@@ -216,7 +215,6 @@ export default {
                 } 
                 else if (this.event.id != project.id) {
                     if (this.method == 1) {
-                        var i;
                         for (i=0;i<this.list.length; i++) {
                             if (project.id == this.list[i].id) {
                                 alert('Entry with the same id already exists..');
@@ -241,6 +239,7 @@ export default {
         this.$emit('close');
     },
     resetValues(){
+        var i;
         if (this.method == 0) {
             this.formTitle = "Add New Project"
             this.id = null
@@ -257,7 +256,6 @@ export default {
             this.id = this.event.id
             this.title= this.event.title || ''
             this.color= this.event.backgroundColor || '#FF0000'
-            var i
             this.totalTime = 0;
             for (i = 0; i < this.events.length; i++) {
                 if (this.events[i].title == this.title) {
@@ -285,7 +283,6 @@ export default {
             this.mileage = ''
             this.tolls = ''
             this.options = [{ value: null, text: 'Please select a project' }]
-            var i
             for (i = 0; i < this.list.length; i++) {
                 this.options.push({value : i, text: this.list[i].title})
             }

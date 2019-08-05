@@ -33,16 +33,13 @@
         </b-row>
         <div id='external-events-listing' style="overflow: scroll; margin-top: 20px; max-height: 600px; margin-bottom: 30px; overflow-x:hidden;">
           <b-row v-for="item in projects" :key="item.id">
-            <b-col cols="1"></b-col>
-            <b-col cols="5">
-            <div class="colorbox" :style="{ background: item.backgroundColor}"  @click="currentEvent = item ,currentMethod = 1, showModal = true"/>
-            </b-col>
-            <b-col cols="4">
-              <div style="text-align: left; width: fit-content; padding: 1px; cursor: default;" :class="{selected: selected === item.id}" @click="currentEvent = item ,currentMethod = 1, showModal = true">
-            {{ item.title }} <br/>
-            ({{ item.id}})
+            <div style="display: inline-flex; margin-left: 40px;" :class="{selected: selected === item.id}" >
+              <div class="colorbox" :style="{ background: item.backgroundColor}"  @click="currentEvent = item ,currentMethod = 1, showModal = true"/>
+              <div style="text-align: left; width: 180px; padding: 1px; cursor: default;" @click="currentEvent = item ,currentMethod = 1, showModal = true">
+                {{ item.title }} <br/>
+                ({{ item.id}})
+              </div>
             </div>
-            </b-col>
           </b-row>
         </div>
 
@@ -65,7 +62,6 @@ import DateChooser from './components/DateChooser'
 import JsonCSV from 'vue-json-csv'
 import moment from 'moment';
 import jsPDF from 'jspdf' 
-import { constants } from 'crypto';
 
 export default {
   name: 'app',
@@ -76,7 +72,7 @@ export default {
     DateChooser,
   },
   methods: {
-    eventRendered(event, element, view){
+    eventRendered(event, element){
       var text = event.title;
       if (event.tolls) 
       {
@@ -116,6 +112,7 @@ export default {
       let pdfName = 'report'; 
       var doc = new jsPDF();
       var text = "";
+
       var startDate = new Date(this.startDate);
       var endDate = new Date(this.endDate);
       var i;
@@ -130,18 +127,31 @@ export default {
         nextDay.setDate(startDate.getDate()+1);
         var flag = false;
 
+        var total_tolls, total_miles, total_hrs;
+        total_tolls =0;
+        total_miles = 0;
+        total_hrs = 0;
+
         for (i=0; i<this.events.length; i++) {
           if (new Date(this.events[i].start) >= startDate && new Date(this.events[i].start) <= nextDay) {
             if (!flag) {
-              doc.text(x, y, startDate.toDateString() + '\n\n');
-              enterCount += 2;
-              y += 10 * 2;
+              doc.setFontStyle('bold');
+              doc.setFontSize(16);
+              doc.text(x, y, startDate.toDateString() + '\n');
+
+
+              enterCount += 1;
+              y += 10 * 1;
               if (enterCount >= 28) {
                 enterCount = 0;
                 y = 10;
                 doc.addPage();
               }
               flag = true;
+
+
+              doc.setFontStyle('regular');
+              doc.setFontSize(12);
             }
 
             var j, proId;
@@ -158,13 +168,16 @@ export default {
             if (this.events[i].tolls) 
             {
               text += this.events[i].tolls + ' tolls - ';
+              total_tolls += Number(this.events[i].tolls);
             }
             if (this.events[i].mileage) 
             {
               text += this.events[i].mileage + ' miles - ';
+              total_miles += Number(this.events[i].mileage);
             }
             var duration = Math.abs(new Date(this.events[i].end) - new Date(this.events[i].start)) / 36e5;
             text += duration + ' hrs.\n'
+            total_hrs += duration;
             enterCount ++;
             doc.text(x, y, text);
             y+= 10;
@@ -177,15 +190,25 @@ export default {
           }
         }
 
-        if (flag) {
-          
-          y+= 10;
-          enterCount ++;
+        if (total_hrs != 0) {
+          doc.setFontStyle('bold');
+          doc.setFontSize(14);
+          text = '\t     Total:  ';
+          if (total_tolls != 0) {
+            text += total_tolls + ' tolls, ';
+          }
+          if (total_miles != 0) {
+            text += total_miles + ' miles, ';
+          }
+          doc.text(x, y, text + total_hrs + ' hrs.' + '\n');
+
+          enterCount += 1;
+          y += 10 * 1;
           if (enterCount >= 28) {
-                enterCount = 0;
-                y = 10;
-                doc.addPage();
-              }
+            enterCount = 0;
+            y = 10;
+            doc.addPage();
+          }
         }
         
         startDate = nextDay;
@@ -439,11 +462,11 @@ export default {
   margin-top: 60px;
 }
 .colorbox {
-  width: 90px !important;
+  width: 30px !important;
   height: 30px !important;
   flex: auto;
   cursor: default;
-  margin-top: 10px;
+  margin: auto 20px auto 10px;
 }
 .main {
   display: flex;
@@ -473,7 +496,7 @@ export default {
 }
 .selected {
   border-style: solid;
-  border-color: red;
+  border-color: black;
 }
 a:not([href]):not([tabindex]) {
     color: azure !important;
