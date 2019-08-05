@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import Datepicker from 'vuejs-datetimepicker';
+import Datepicker from './datetime_picker';
 
 export default {
     name: 'DateChooser',

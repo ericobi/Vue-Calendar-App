@@ -44,7 +44,7 @@
                     <label >Start:</label>
                     </b-col>
                     <b-col sm="10">
-                    <Datepicker format="YYYY-MM-DD H:i:s"  v-model="start" />
+                    <Datepicker format="YYYY-MM-DD H:i"  v-model="start" />
                     </b-col>
                 </b-row>
 
@@ -53,7 +53,7 @@
                     <label >End:</label>
                     </b-col>
                     <b-col sm="10">
-                    <Datepicker format="YYYY-MM-DD H:i:s"  v-model="end" />
+                    <Datepicker format="YYYY-MM-DD H:i"  v-model="end" />
                     </b-col>
                 </b-row>
 
@@ -144,7 +144,7 @@
 </template>
 
 <script>
-import Datepicker from 'vuejs-datetimepicker';
+import Datepicker from './datetime_picker';
 import colorpicker from './ColorPicker';
 import moment from 'moment';
 
