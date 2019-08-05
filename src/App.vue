@@ -73,11 +73,11 @@ export default {
   },
   created() {
     var today = new Date();
-    today = today.setDate(today.getDate() + 1);
+    today = today.setDate(today.getDate() + 2);
     this.endDate = new Date(today).toISOString().slice(0, 10);
 
     var today1 = new Date();
-    today1 = today1.setDate(today1.getDate() - 7);
+    today1 = today1.setDate(today1.getDate() - 6);
     this.startDate = new Date(today1).toISOString().slice(0, 10);
     console.log(this.startDate)
   },
@@ -125,7 +125,7 @@ export default {
 
       var startDate = new Date(this.startDate);
       var endDate = new Date(this.endDate);
-      var i;
+      var i, k;
       startDate.setHours(0);
       endDate.setHours(0);
 
@@ -141,6 +141,8 @@ export default {
         total_tolls =0;
         total_miles = 0;
         total_hrs = 0;
+
+        var condensed_array = [];
 
         for (i=0; i<this.events.length; i++) {
           if (new Date(this.events[i].start) >= startDate && new Date(this.events[i].start) <= nextDay) {
@@ -188,19 +190,71 @@ export default {
             var duration = Math.abs(new Date(this.events[i].end) - new Date(this.events[i].start)) / 36e5;
             text += duration + ' hrs.\n'
             total_hrs += duration;
-            enterCount ++;
-            doc.text(x, y, text);
-            y+= 10;
-            console.log(enterCount);
-            if (enterCount >= 28) {
-                enterCount = 0;
-                y = 10;
-                doc.addPage();
+            if (!this.condensed) {
+              enterCount ++;
+              doc.text(x, y, text);
+              y+= 10;
+              console.log(enterCount);
+              if (enterCount >= 28) {
+                  enterCount = 0;
+                  y = 10;
+                  doc.addPage();
               }
+            } else {
+              var fflag = false;
+              for (k=0; k<condensed_array.length; k++ ) {
+                if (condensed_array[k].id === proId) {
+                  fflag = true;
+                  if (this.events[i].tolls) {
+                    condensed_array[k].tolls += Number(this.events[i].tolls);
+                  }
+                  if (this.events[i].mileage) {
+                    condensed_array[k].miles += Number(this.events[i].mileage);
+                  }
+                  condensed_array[k].hrs += duration;
+                  break;
+                }
+              }
+              if (!fflag) {
+                condensed_array.push({
+                  title: this.events[i].title,
+                  id: proId,
+                  tolls: this.events[i].tolls ? Number(this.events[i].tolls) : 0,
+                  miles: this.events[i].mileage ? Number(this.events[i].mileage) : 0,
+                  hrs: duration
+                });
+              }
+            }
           }
         }
 
         if (total_hrs != 0) {
+          doc.setFontStyle('regular');
+          doc.setFontSize(12);
+
+          for (k=0; k<condensed_array.length; k++ ) {
+            text = '\t\t' + condensed_array[k].title + ' - ' + condensed_array[k].id + ' - ';
+            if (condensed_array[k].tolls > 0) 
+            {
+              text += condensed_array[k].tolls + ' tolls - ';
+            }
+            if (condensed_array[k].miles) 
+            {
+              text += condensed_array[k].miles + ' miles - ';
+            }
+            text += condensed_array[k].hrs + ' hrs.\n'
+
+            enterCount ++;
+            doc.text(x, y, text);
+            y+= 10;
+            if (enterCount >= 28) {
+                enterCount = 0;
+                y = 10;
+                doc.addPage();
+            }
+          }
+
+
           doc.setFontStyle('bold');
           doc.setFontSize(14);
           text = '\t     Total:  ';
