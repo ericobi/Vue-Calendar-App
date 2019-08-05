@@ -71,6 +71,16 @@ export default {
     JsonCSV,
     DateChooser,
   },
+  created() {
+    var today = new Date();
+    today = today.setDate(today.getDate() + 1);
+    this.endDate = new Date(today).toISOString().slice(0, 10);
+
+    var today1 = new Date();
+    today1 = today1.setDate(today1.getDate() - 7);
+    this.startDate = new Date(today1).toISOString().slice(0, 10);
+    console.log(this.startDate)
+  },
   methods: {
     eventRendered(event, element){
       var text = event.title;
@@ -424,11 +434,13 @@ export default {
     dateChanged(arg) {
       this.startDate = arg.start;
       this.endDate = arg.end;
+      this.condensed = arg.condensed;
       this.download();
     }
   },
   data () {
     return {
+      condensed: false,
       currentMethod: 0,
       startDate: '2019-07-10',
       endDate: '2019-07-20',
