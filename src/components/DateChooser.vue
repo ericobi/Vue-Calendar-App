@@ -58,7 +58,7 @@ export default {
             condensed: false,
         }
     },
-    mounted() {
+    created() {
         this.startDate = this.start;
         this.endDate = this.end;
     },

@@ -79,7 +79,6 @@ export default {
     var today1 = new Date();
     today1 = today1.setDate(today1.getDate() - 6);
     this.startDate = new Date(today1).toISOString().slice(0, 10);
-    console.log(this.startDate)
   },
   methods: {
     eventRendered(event, element){
@@ -308,6 +307,32 @@ export default {
       //return result; //JavaScript object
       return JSON.stringify(result); //JSON
     },
+    formatDate(ddd) {
+          var date = ddd
+          var aaaa = date.getFullYear();
+            var gg = date.getDate();
+            var mm = (date.getMonth() + 1);
+
+            if (gg < 10)
+                gg = "0" + gg;
+
+            if (mm < 10)
+                mm = "0" + mm;
+
+            var cur_day = aaaa + "-" + mm + "-" + gg;
+
+            var hours = date.getHours()
+            var minutes = date.getMinutes()
+
+            if (hours < 10)
+                hours = "0" + hours;
+
+            if (minutes < 10)
+                minutes = "0" + minutes;
+
+
+            return cur_day + " " + hours + ":" + minutes;
+      },
     importCsv(e) {
 
       var file = e.target.files[0];
@@ -321,6 +346,33 @@ export default {
         var json =  vm.csvJSON(vm.fileinput);
 
         var newEvents = JSON.parse(json);
+
+        newEvents.forEach(element => {
+          var d = new Date(element.start)
+          if (d.getMinutes() < 15) {
+            d.setMinutes(0)
+          } else if ( d.getMinutes() < 30) {
+            d.setMinutes(15)
+          } else if ( d.getMinutes() < 45) {
+            d.setMinutes(30)
+          } else {
+            d.setMinutes(45)
+          }
+          element.start = this.formatDate(d)
+
+          d = new Date(element.end)
+          if (d.getMinutes() < 15) {
+            d.setMinutes(0)
+          } else if ( d.getMinutes() < 30) {
+            d.setMinutes(15)
+          } else if ( d.getMinutes() < 45) {
+            d.setMinutes(30)
+          } else {
+            d.setMinutes(45)
+          }
+          element.end = this.formatDate(d)
+          console.log(element)
+        });
 
         vm.events = newEvents;
         vm.updateProjectsView();
@@ -563,6 +615,7 @@ export default {
 .selected {
   border-style: solid;
   border-color: black;
+  border-width: thin;
 }
 a:not([href]):not([tabindex]) {
     color: azure !important;

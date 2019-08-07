@@ -154,6 +154,8 @@ export default {
             if (seconds < 10)
                 seconds = "0" + seconds;
 
+            if (this.format == 'YYYY-MM-DD') return cur_day;
+
             return cur_day + " " + hours + ":" + minutes;
       },
 	  leftMonth () {
@@ -446,6 +448,7 @@ export default {
       this.minute = this.minute < 10 ? '0' + this.minute : '' + this.minute
       this.updateCalendar()
       this.setDate()
+      this.date1 = this.formatDate(this.value)
     }
   },
   destroyed: function () {
