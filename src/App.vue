@@ -329,7 +329,6 @@ export default {
 
       }
 
-      //return result; //JavaScript object
       return JSON.stringify(result); //JSON
     },
     formatDate(ddd) {
