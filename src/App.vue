@@ -93,6 +93,19 @@ export default {
       }
       
       element[0].getElementsByClassName("fc-title")[0].innerHTML = text;
+
+      element[0].getElementsByClassName("fc-time")[0].innerHTML += "<br/>";
+      var duration = Math.abs(new Date(event.end) - new Date(event.start)) / 36e5;
+      console.log(duration)
+      element[0].getElementsByClassName("fc-time")[0].innerHTML += "( " + duration + " hrs )";
+    },
+    clone(obj) {
+        if (null == obj || "object" != typeof obj) return obj;
+        var copy = obj.constructor();
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+        }
+        return copy;
     },
     updateProjectsView() {
       var i, j;
@@ -113,6 +126,16 @@ export default {
             backgroundColor: this.events[i].backgroundColor,
           }
           this.projects.push(new_project);
+        }
+      }
+
+      for (i=0; i<this.projects.length; i++) {
+        for (j=i+1;j <this.projects.length; j++) {
+          if (this.projects[i].title > this.projects[j].title) {
+            var tmp = this.clone(this.projects[i]);
+            this.projects[i] = this.projects[j];
+            this.projects[j] = tmp;
+          }
         }
       }
     },
@@ -175,7 +198,9 @@ export default {
               }
             }
 
-            text = '\t\t' + this.events[i].title + ' - ' + proId + ' - ';
+            
+
+            text = '\t\t' + this.events[i].start.split(" ")[1] + " - " + this.events[i].end.split(" ")[1] + ' - ' + proId + ' - ';
             if (this.events[i].tolls) 
             {
               text += this.events[i].tolls + ' tolls - ';
@@ -187,13 +212,13 @@ export default {
               total_miles += Number(this.events[i].mileage);
             }
             var duration = Math.abs(new Date(this.events[i].end) - new Date(this.events[i].start)) / 36e5;
-            text += duration + ' hrs.\n'
+            text += duration + ' hrs - ';
+            text += this.events[i].title + '.\n';
             total_hrs += duration;
             if (!this.condensed) {
               enterCount ++;
               doc.text(x, y, text);
               y+= 10;
-              console.log(enterCount);
               if (enterCount >= 28) {
                   enterCount = 0;
                   y = 10;

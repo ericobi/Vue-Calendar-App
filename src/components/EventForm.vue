@@ -244,14 +244,71 @@ export default {
     close() {
         this.$emit('close');
     },
+    formatDate(ddd) {
+          var date = ddd
+          var aaaa = date.getFullYear();
+            var gg = date.getDate();
+            var mm = (date.getMonth() + 1);
+
+            if (gg < 10)
+                gg = "0" + gg;
+
+            if (mm < 10)
+                mm = "0" + mm;
+
+            var cur_day = aaaa + "-" + mm + "-" + gg;
+
+            var hours = date.getHours()
+            var minutes = date.getMinutes()
+            var seconds = date.getSeconds()
+
+            if (hours < 10)
+                hours = "0" + hours;
+
+            if (minutes < 10)
+                minutes = "0" + minutes;
+
+
+            if (seconds < 10)
+                seconds = "0" + seconds;
+
+
+            return cur_day + " " + hours + ":" + minutes + ":" + seconds;
+      },
     resetValues(){
         var i;
         if (this.method == 0) {
             this.formTitle = "Add New Project"
             this.id = null
             this.title= ''
+
             this.start= moment().format("YYYY-MM-DD HH:mm:ss")
+
+            var d = new Date(this.start)
+            if (d.getMinutes() < 15) {
+                d.setMinutes(0)
+            } else if ( d.getMinutes() < 30) {
+                d.setMinutes(15)
+            } else if ( d.getMinutes() < 45) {
+                d.setMinutes(30)
+            } else {
+                d.setMinutes(45)
+            }
+            this.start = this.formatDate(d)
+
             this.end= moment().add(2, 'h').format("YYYY-MM-DD HH:mm:ss")
+
+            d = new Date(this.end)
+            if (d.getMinutes() < 15) {
+                d.setMinutes(0)
+            } else if ( d.getMinutes() < 30) {
+                d.setMinutes(15)
+            } else if ( d.getMinutes() < 45) {
+                d.setMinutes(30)
+            } else {
+                d.setMinutes(45)
+            }
+            this.end = this.formatDate(d)
             this.phase = ''
             this.mileage = ''
             this.tolls = ''
@@ -293,7 +350,32 @@ export default {
             this.formTitle = "Add New Event"
             this.id = null
             this.start= moment().format("YYYY-MM-DD HH:mm:ss")
+
+            var d = new Date(this.start)
+            if (d.getMinutes() < 15) {
+                d.setMinutes(0)
+            } else if ( d.getMinutes() < 30) {
+                d.setMinutes(15)
+            } else if ( d.getMinutes() < 45) {
+                d.setMinutes(30)
+            } else {
+                d.setMinutes(45)
+            }
+            this.start = this.formatDate(d)
+
             this.end= moment().add(2, 'h').format("YYYY-MM-DD HH:mm:ss")
+
+            d = new Date(this.end)
+            if (d.getMinutes() < 15) {
+                d.setMinutes(0)
+            } else if ( d.getMinutes() < 30) {
+                d.setMinutes(15)
+            } else if ( d.getMinutes() < 45) {
+                d.setMinutes(30)
+            } else {
+                d.setMinutes(45)
+            }
+            this.end = this.formatDate(d)
             this.phase = ''
             this.mileage = ''
             this.tolls = ''
